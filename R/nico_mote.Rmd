@@ -57,15 +57,24 @@ data.frame(tag = top.10, count = nico.tag.df[top.10, "sum"])
 などの亜種が多数存在しており、潜在能力は計り知れない
 
 ## とりあえずグラフ
-最初の投稿がある2007/11の前月から2年分の伸びを調べる
+```{r echo=FALSE, comment=NA}
+nico.jikkyo.all <- data.frame(
+  time = names(nico.tag.df)[1:67],
+  count = as.vector(as.matrix(nico.tag.df["実況プレイ動画", 1:67])))
+plot(1:67, nico.jikkyo.all$count, type = "l", col = 4, xaxt="n", xlab="time", ylab="count")
+  axis(1, labels=nico.jikkyo.all$time, nico.jikkyo.all$time)
+```
+伸び始めてるあたりからとりたいので、  
+2007/10から2年分の伸びを調べる(この辺のチョイスは適当)
 
-```{r echo=FALSE, comment=NA, out.width=600, out.height=400}
+あと、計算ミスで25ヶ月分にしてたw
+
+```{r echo=FALSE, comment=NA}
 nico.jikkyo <- data.frame(
   time = names(nico.tag.df)[7:31],
   count = as.vector(as.matrix(nico.tag.df["実況プレイ動画", 7:31])))
-library(ggplot2)
-ggplot(nico.jikkyo, aes(x = time, y = count)) +
-  geom_point()
+plot(7:31, nico.jikkyo$count, type = "l", col = 4, xaxt="n", xlab="time", ylab="count")
+axis(1, labels=nico.jikkyo$time, nico.jikkyo$time)
 ```
 
 あ、なんかロジスティック曲線っぽい(適当)  
@@ -74,12 +83,15 @@ ggplot(nico.jikkyo, aes(x = time, y = count)) +
 ### 寄り道
 「実況プレイpart1リンク」というタグがある
 ここでこいつの全体像を見ていただこう
-```{r echo=FALSE, comment=NA, out.width=600, out.height=400}
+```{r echo=FALSE, comment=NA, out.width=800, out.height=400}
 nico.jikkyo.part1 <- data.frame(
   time = names(nico.tag.df)[1:67],
   count = as.vector(as.matrix(nico.tag.df["実況プレイpart1リンク", 1:67])))
-ggplot(nico.jikkyo.part1, aes(x = time, y = count)) +
-  geom_point()
+par(mfrow = c(1, 2))
+plot(1:67, nico.jikkyo.part1$count, type = "l", col = 2, xaxt="n", xlab="time", ylab="count")
+axis(1, labels=nico.jikkyo.part1$time, nico.jikkyo.part1$time)
+plot(1:67, nico.jikkyo.all$count, type = "l", col = 4, xaxt="n", xlab="time", ylab="count")
+axis(1, labels=nico.jikkyo.all$time, nico.jikkyo.all$time)
 ```
 
 近年急激に増えている  
@@ -110,6 +122,74 @@ cat("part1の占める割合：", jikkyo.1.count / jikkyo.count, "\n")
 
 ## 回帰分析とかしてみる
 というわけでロジる  
-```{r}
 
+やること
+
+1. 0-1にスケールさせる
+2. 時間軸を経過月数にする
+3. レッツ回帰♪
+
+```{r echo=FALSE, warning=FALSE, comment=NA}
+nico.jikkyo$num <- 1:nrow(nico.jikkyo)
+sum <- max(nico.jikkyo$count) + min(nico.jikkyo$count)
+nico.jikkyo$norm <- nico.jikkyo$count / sum
+head(nico.jikkyo)
+nico.jikkyo$N <- rep(round(mean(nico.jikkyo$norm)), nrow(nico.jikkyo))
+
+(nico.glm <- glm(cbind(norm, N - norm) ~ num, data = nico.jikkyo, family=binomial))
+
+line <- (1 / (1 + exp(
+  -(nico.glm$coefficients[1] + nico.glm$coefficients[2] * nico.jikkyo$num))))
+
+par(family = "Osaka")
+plot(nico.jikkyo$num, line, type = "l", col = 2,
+     main = "モテる動画の伸び方",
+     xlab = "time", ylab = "count")
+par(new = T)
+plot(nico.jikkyo$num, nico.jikkyo$norm, col = 4, pch = 4,
+     xlab = "", ylab = "",　xaxt = "n", yaxt = "n")
 ```
+
+## さて、モテジャンルを探す
+まずは、これから伸びてきてるものを探す  
+今から25ヶ月前(2012/2)からデータのある10月までなので、
+8ヶ月間で伸びてて、それ以前はほとんどデータがないものを持ち出す
+
+選ばれし人気の動画たち
+```{r echo=FALSE, warning=FALSE, comment=NA}
+nico.tag.df$kako <- rowSums(nico.tag.df[, 1:58])
+mote <- nico.tag.df[nico.tag.df$kako < 10 & nico.tag.df$sum > 100, 59:68]
+mote <- mote[order(mote$sum, decreasing=T), ]
+
+row.names(mote)[1:5]
+```
+
+そいつらのプロット
+```{r echo=FALSE, warning=FALSE, comment=NA}
+par(family = "Osaka")
+plot(1:9, mote[1, 1:9], type = "l", col = 1, xaxt= "n", xlab = "count", ylab = "time")
+for (i in 2:5) {
+  par(new = T)
+  plot(1:9, mote[i, 1:9], type = "l", col = i, xlab = "", ylab = "", xaxt = "n", yaxt = "n")
+}
+legend(x = 5, y = 130, legend = row.names(mote)[1:5], col = 1:5, lty = rep(1, 5))
+axis(1, labels=as.factor(names(mote[1:9])), as.factor(names(mote[1:9])))
+```
+
+## 悲しいお知らせ
+こいつら、突然現れてね？  そして、ものによっては突然消えてね？
+
+これより下も調べてみたんだけど、
+どうやら最近伸びるのは、
+* アニメのMAD
+ * 放送期間中け伸びる
+ * 職人しか入り込めない領域
+* 新作ゲーム
+ * 発売日からいきなり伸びる
+ * maimaiはゲーセンに投稿昨日があるから伸びてるっぽい
+
+## ここからわかったこと
+**流行るゲームを予測すればよい！**
+
+## 結論
+人はそんな簡単にモテたりしない

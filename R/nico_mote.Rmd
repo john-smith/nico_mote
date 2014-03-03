@@ -1,0 +1,115 @@
+# ニコニコ動画モテる方法を考えてみた
+## どうしてこうなった
+ニコニコ動画で人気投稿者になればモテるらしい  
+最近ではニコ生も流行っているが、データセットにはそれが無い
+
+さて、データセットと人気投稿者にどういった関係があるのかというと  
+
+人気のジャンルは既に人気な人が固定されてしまっていて  
+新参者が人気になるにはよっぽど面白いネタが必要だ  
+
+そんな才能あったらとっくに人気者になってるはず
+
+では、我々がモテる方法なんてないのか？否！  
+これから人気になるジャンルの動画を見つければ  
+**面白くなくてもファンが付く**かもしれない
+
+そう、我々にはデータがある！  
+何が人気になるか予測してやろうじゃないか！
+
+## やること
+カテゴリタグ以外で、付いてる動画が多いタグを見つけ出し、  
+そのタグの増え方を回帰分析  
+
+似たような伸び方してる他のタグでまだ新参者が入り込める余地のあるものを見つければ勝ち
+
+べ、別に、動画投稿数だけで単回帰しかできないわけじゃないんだからねっ！  
+重回帰とからくしょーなんだから！勘違いしないでよねっ！！
+
+## データの前処理
+各タグがついた動画ごとに、
+```
+tag, 投稿月, その月の投稿数
+```
+の形式で集計したものをdata frameにする
+```{r echo=FALSE, warning=FALSE, comment=NA}
+nico.tag.time <- read.csv("../data/tag_time.csv", header = T, stringsAsFactors = F)
+nico.tag.time$count <- as.integer(nico.tag.time$count)
+nico.tag.time <- nico.tag.time[!is.na(nico.tag.time$count), ]
+#最初の月と最後の月はデータが一ヶ月分無い可能性があるので削除
+nico.tag.time <- nico.tag.time[(nico.tag.time$time != "2007-03" & nico.tag.time$time != "2012-11"), ]
+nico.tag.table <- xtabs(count~tag + time, nico.tag.time)
+nico.tag.df <- as.data.frame(nico.tag.table[, 1:ncol(nico.tag.table)])
+nico.tag.df$sum <- rowSums(nico.tag.df)
+
+nico.tag.df[1:10, c(1, 2, 67, 68)]
+```
+
+## 数が多いタグを取得
+```{r echo=FALSE, comment=NA}
+top.10 <- head(rownames(nico.tag.df[order(nico.tag.df$sum, decreasing=T), ], ), 10)
+data.frame(tag = top.10, count = nico.tag.df[top.10, "sum"])
+```
+
+なんか実況プレイ動画圧倒的なので、こいつを利用する
+
+ちなみにこいつ、「ゲーム」、「ゆっくり実況プレイ」、「実況プレイ」 
+などの亜種が多数存在しており、潜在能力は計り知れない
+
+## とりあえずグラフ
+最初の投稿がある2007/11の前月から2年分の伸びを調べる
+
+```{r echo=FALSE, comment=NA, out.width=600, out.height=400}
+nico.jikkyo <- data.frame(
+  time = names(nico.tag.df)[7:31],
+  count = as.vector(as.matrix(nico.tag.df["実況プレイ動画", 7:31])))
+library(ggplot2)
+ggplot(nico.jikkyo, aes(x = time, y = count)) +
+  geom_point()
+```
+
+あ、なんかロジスティック曲線っぽい(適当)  
+スケールをうまいこと調整すればここまで伸びてないものにも使えるんじゃね？(適当)
+
+### 寄り道
+「実況プレイpart1リンク」というタグがある
+ここでこいつの全体像を見ていただこう
+```{r echo=FALSE, comment=NA, out.width=600, out.height=400}
+nico.jikkyo.part1 <- data.frame(
+  time = names(nico.tag.df)[1:67],
+  count = as.vector(as.matrix(nico.tag.df["実況プレイpart1リンク", 1:67])))
+ggplot(nico.jikkyo.part1, aes(x = time, y = count)) +
+  geom_point()
+```
+
+近年急激に増えている  
+さらにここから衝撃の事実がわかる
+
+まずはそれぞれの総投稿数を見ていただこう
+```{r echo=FALSE, comment=NA}
+jikkyo.count <- nico.tag.df["実況プレイ動画", "sum"]
+cat("「実況プレイ動画」の投稿数：", jikkyo.count, "\n")
+
+jikkyo.1.count <-nico.tag.df["実況プレイpart1リンク", "sum"]
+cat("「実況プレイpart1リンク」の投稿数：", jikkyo.1.count, "\n")
+
+cat("part1の占める割合：", jikkyo.1.count / jikkyo.count, "\n")
+```
+
+ゲームをプレイするという性質上、複数partに動画が及ぶのが  
+普通なゲームにおいて、part1が4%なのは一見するとそこまで気にすることじゃないだろう  
+
+しかし、この4%ということと、近年急激に伸びていることから予測されるのは
+* 最近は短いものが流行か、多くの新参者が夢を散らせている
+* かなりの頻度で動画を上げる必要がある
+
+あたりだろうか。  
+
+面白いものを考えれなくて、
+忙しい人のための○○系を見るくらい忙しい私には難しそうだ
+
+## 回帰分析とかしてみる
+というわけでロジる  
+```{r}
+
+```

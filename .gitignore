@@ -1,0 +1,11 @@
+java/dependency-reduced-pom.xml
+java/target/*
+
+R/*.html
+R/*.md
+R/.Rproj.user
+R/.RData
+R/.Rhistory
+R/figure/*
+
+data/nico_video/*

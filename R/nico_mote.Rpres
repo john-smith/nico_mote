@@ -14,6 +14,17 @@ date: 2014/03/08
  * **彼女欲しいです**
  * **彼女欲しいです**
 
+注意
+========================================================
+* 割となんちゃって統計です
+ * この内容を本気にする
+ * ちゃんと分析してるとか思う
+* と言った行為はご遠慮ください
+
+URL
+========================================================
+* こちら
+ * http://john-smith.github.io/nico_mote/
 
 どうしてこうなった
 ========================================================
@@ -63,7 +74,7 @@ data.frame(tag = top.10, count = nico.tag.df[top.10, "sum"])
 
 どんな感じに伸びてるか
 ========================================================
-```{r echo=FALSE, comment=NA}
+```{r echo=FALSE, comment=NA, fig.align="center"}
 nico.jikkyo.all <- data.frame(
   time = names(nico.tag.df)[1:67],
   count = as.vector(as.matrix(nico.tag.df["実況プレイ動画", 1:67])))
@@ -78,7 +89,7 @@ axis(1, labels=nico.jikkyo.all$time, 1:67)
 * 2年間くらいなら待てるので伸び始めからの期間で見てみる
 * こいつに近い伸び方してるものを探そう
 
-```{r echo=FALSE, comment=NA}
+```{r echo=FALSE, comment=NA, fig.align="center"}
 nico.jikkyo <- data.frame(
   time = names(nico.tag.df)[7:31],
   count = as.vector(as.matrix(nico.tag.df["実況プレイ動画", 7:31])))
@@ -92,7 +103,7 @@ axis(1, labels=nico.jikkyo$time, 7:31)
 2. 時間軸を経過月数にする
 3. レッツ回帰♪
 
-```{r echo=FALSE, warning=FALSE, comment=NA}
+```{r echo=FALSE, warning=FALSE, comment=NA, fig.align="center"}
 nico.jikkyo$num <- 1:nrow(nico.jikkyo)
 sum <- max(nico.jikkyo$count) + min(nico.jikkyo$count)
 nico.jikkyo$norm <- nico.jikkyo$count / sum
@@ -129,12 +140,14 @@ nico.tag.df$kako <- rowSums(nico.tag.df[, 1:58])
 mote <- nico.tag.df[nico.tag.df$kako < 10 & nico.tag.df$sum > 100, 59:68]
 mote <- mote[order(mote$sum, decreasing=T), ]
 
-row.names(mote)[1:5]
+for (i in 1:5) {
+  print(row.names(mote)[i])
+}
 ```
 
 ランキングぅ〜の様子を見てみる
 ========================================================
-```{r echo=FALSE, warning=FALSE, comment=NA}
+```{r echo=FALSE, warning=FALSE, comment=NA, fig.align="center"}
 par(family = "Osaka")
 plot(1:9, mote[1, 1:9], type = "l", col = 1, xaxt= "n", xlab = "count", ylab = "time")
 for (i in 2:5) {
@@ -179,12 +192,13 @@ jikkyo.1.count <-nico.tag.df["実況プレイpart1リンク", "sum"]
 
 * 実況プレイ動画全体に対するpart1の割合
  * 「実況プレイ動画」：`r as.character(jikkyo.count)`
- * 「実況プレイpart1リンク」；`r as.character(jikkyo.1.count)`
+ * 「実況プレイpart1リンク」：`r as.character(jikkyo.1.count)`
  * part1の占める割合：約`r round((jikkyo.1.count/jikkyo.count)*100)`%
 
 おまけ
 ========================================================
-```{r echo=FALSE, comment=NA}
+* どんな感じで伸びてるか
+```{r echo=FALSE, comment=NA, fig.align="center", fig.width=13, fig.height=7}
 nico.jikkyo.part1 <- data.frame(
   time = names(nico.tag.df)[1:67],
   count = as.vector(as.matrix(nico.tag.df["実況プレイpart1リンク", 1:67])))

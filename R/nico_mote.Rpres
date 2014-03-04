@@ -1,0 +1,204 @@
+ニコニコ動画でモテる方法を考えてみた
+========================================================
+author: じょんすみす
+date: 2014/03/08
+
+自己紹介
+========================================================
+* じょんすみす
+ * ひらがなです
+* @\_\_john\_smith__
+* 野生の変態
+* (たいしてデータじゃない)エンジニア
+* **独身**
+ * **彼女欲しいです**
+ * **彼女欲しいです**
+
+
+どうしてこうなった
+========================================================
+* なぜ私には彼女がいないのか？
+* そんなこと考えても仕方ない
+* ならばこれからモテればいい
+
+どうすればモテる
+========================================================
+* ニコニコ動画で人気投票者になればいい
+* しかしそれは難しい
+ * 人気者はすでにいっぱいいる
+ * よっぽど面白く名と人気のジャンルじゃ勝てないぞ
+
+どうすればモテる(2)
+========================================================
+* ならばこれから流行るジャンルに参入すればいい
+* 投稿者が少ないから面白くなくてもファンがつく！
+ * 流行った頃にはモテモテ♡
+ 
+ どうやって流行るものを見つけるか
+========================================================
+* データから予測しよう
+* 今流行ってるものと同じような伸び方してるもの見つければいいんじゃね？
+
+レッツトライ♪
+========================================================
+* まずは流行ってるもの動画を見つける
+ * タグの数で判断してみよう
+ 
+```{r echo=FALSE, warning=FALSE, comment=NA}
+nico.tag.time <- read.csv("../data/tag_time.csv", header = T, stringsAsFactors = F)
+nico.tag.time$count <- as.integer(nico.tag.time$count)
+nico.tag.time <- nico.tag.time[!is.na(nico.tag.time$count), ]
+#最初の月と最後の月はデータが一ヶ月分無い可能性があるので削除
+nico.tag.time <- nico.tag.time[(nico.tag.time$time != "2007-03" & nico.tag.time$time != "2012-11"), ]
+nico.tag.table <- xtabs(count~tag + time, nico.tag.time)
+nico.tag.df <- as.data.frame(nico.tag.table[, 1:ncol(nico.tag.table)])
+nico.tag.df$sum <- rowSums(nico.tag.df)
+
+top.10 <- head(rownames(nico.tag.df[order(nico.tag.df$sum, decreasing=T), ], ), 5)
+data.frame(tag = top.10, count = nico.tag.df[top.10, "sum"])
+```
+
+* 実況プレイ動画つよくね？
+ * こいつのパターンで勝ち確だ
+
+どんな感じに伸びてるか
+========================================================
+```{r echo=FALSE, comment=NA}
+nico.jikkyo.all <- data.frame(
+  time = names(nico.tag.df)[1:67],
+  count = as.vector(as.matrix(nico.tag.df["実況プレイ動画", 1:67])))
+plot(1:67, nico.jikkyo.all$count, type = "l", col = 4, xaxt="n", xlab="time", ylab="count")
+axis(1, labels=nico.jikkyo.all$time, 1:67)
+```
+* いきなり伸びる期間ある
+* その後は少しずつ増えつつもやや収束気味
+
+じゃあ、どうする？
+========================================================
+* 2年間くらいなら待てるので伸び始めからの期間で見てみる
+* こいつに近い伸び方してるものを探そう
+
+```{r echo=FALSE, comment=NA}
+nico.jikkyo <- data.frame(
+  time = names(nico.tag.df)[7:31],
+  count = as.vector(as.matrix(nico.tag.df["実況プレイ動画", 7:31])))
+plot(7:31, nico.jikkyo$count, type = "l", col = 4, xaxt="n", xlab="time", ylab="count")
+axis(1, labels=nico.jikkyo$time, 7:31)
+```
+
+ふぃってぃんぐ〜
+========================================================
+1. 0-1にスケールさせる
+2. 時間軸を経過月数にする
+3. レッツ回帰♪
+
+```{r echo=FALSE, warning=FALSE, comment=NA}
+nico.jikkyo$num <- 1:nrow(nico.jikkyo)
+sum <- max(nico.jikkyo$count) + min(nico.jikkyo$count)
+nico.jikkyo$norm <- nico.jikkyo$count / sum
+nico.jikkyo$N <- rep(round(mean(nico.jikkyo$norm)), nrow(nico.jikkyo))
+nico.jikkyo$N <- rep(round(mean(nico.jikkyo$norm)), nrow(nico.jikkyo))
+nico.glm <- glm(cbind(norm, N - norm) ~ num, data = nico.jikkyo, family=binomial)
+
+line <- (1 / (1 + exp(
+  -(nico.glm$coefficients[1] + nico.glm$coefficients[2] * nico.jikkyo$num))))
+
+par(family = "Osaka", mfrow = c(1, 1))
+plot(nico.jikkyo$num, line, type = "l", col = 2,
+     main = "モテる動画の伸び方",
+     xlab = "time", ylab = "count")
+par(new = T)
+plot(nico.jikkyo$num, nico.jikkyo$norm, col = 4, pch = 4,
+     xlab = "", ylab = "",　xaxt = "n", yaxt = "n")
+```
+
+最近伸びてる動画を探す
+========================================================
+* とは言っても、2012/11までのデータしかない
+ * 2013/3現在までの伸びを予測できるかやってみよう
+ * うまくいけばあとは何らかの方法で現在のデータを入手するだけ
+* というわけなので
+ * 2012/02からではじめていい感じに伸びてきてる動画ランキングぅ〜
+ * この辺は適当に決めてますw
+ 
+伸びてる動画ランキングぅ〜
+========================================================
+* maimaiが今一番熱いようだ
+```{r echo=FALSE, warning=FALSE, comment=NA}
+nico.tag.df$kako <- rowSums(nico.tag.df[, 1:58])
+mote <- nico.tag.df[nico.tag.df$kako < 10 & nico.tag.df$sum > 100, 59:68]
+mote <- mote[order(mote$sum, decreasing=T), ]
+
+row.names(mote)[1:5]
+```
+
+ランキングぅ〜の様子を見てみる
+========================================================
+```{r echo=FALSE, warning=FALSE, comment=NA}
+par(family = "Osaka")
+plot(1:9, mote[1, 1:9], type = "l", col = 1, xaxt= "n", xlab = "count", ylab = "time")
+for (i in 2:5) {
+  par(new = T)
+  plot(1:9, mote[i, 1:9], type = "l", col = i, xlab = "", ylab = "", xaxt = "n", yaxt = "n")
+}
+legend(x = 5, y = 130, legend = row.names(mote)[1:5], col = 1:5, lty = rep(1, 5))
+axis(1, labels=as.factor(names(mote[1:9])), 1:9)
+```
+
+* なん・・・だと！？
+ * こいつら、突然現れやがった
+ 
+わかったこと
+========================================================
+これより下も調べてみた結果、どうやら最近伸びるのは
+
+* アニメのMAD
+ * 放送期間中け伸びる
+ * 職人しか入り込めない領域
+* 新作ゲーム
+ * 発売日からいきなり伸びる
+ * maimaiはゲーセンに投稿昨日があるから伸びてるっぽい
+
+のようだ
+
+さて、モテよう
+========================================================
+* 無理です
+* こんなことしてないでこれから流行るゲームでも予測しとけばよかった
+
+結論
+========================================================
+* **人はそんなに簡単にモテない**
+
+おまけ
+========================================================
+```{r echo=FALSE, comment=NA}
+jikkyo.count <- nico.tag.df["実況プレイ動画", "sum"]
+jikkyo.1.count <-nico.tag.df["実況プレイpart1リンク", "sum"]
+```
+
+* 実況プレイ動画全体に対するpart1の割合
+ * 「実況プレイ動画」：`r as.character(jikkyo.count)`
+ * 「実況プレイpart1リンク」；`r as.character(jikkyo.1.count)`
+ * part1の占める割合：約`r round((jikkyo.1.count/jikkyo.count)*100)`%
+
+おまけ
+========================================================
+```{r echo=FALSE, comment=NA}
+nico.jikkyo.part1 <- data.frame(
+  time = names(nico.tag.df)[1:67],
+  count = as.vector(as.matrix(nico.tag.df["実況プレイpart1リンク", 1:67])))
+par(mfrow = c(1, 2))
+plot(1:67, nico.jikkyo.part1$count, type = "l", col = 2, xaxt="n", xlab="time", ylab="count")
+axis(1, labels=nico.jikkyo.part1$time, 1:67)
+plot(1:67, nico.jikkyo.all$count, type = "l", col = 4, xaxt="n", xlab="time", ylab="count")
+axis(1, labels=nico.jikkyo.all$time, 1:67)
+```
+
+おまけ
+========================================================
+* 最近は短いものが流行か、多くの新参者が夢を散らせている
+* かなりの頻度で動画を上げる必要がある
+
+面白いものを考えれなくて、
+「忙しい人のための○○系」を見るくらい忙しい私には難しそうだ

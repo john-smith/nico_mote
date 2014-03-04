@@ -62,7 +62,7 @@ nico.jikkyo.all <- data.frame(
   time = names(nico.tag.df)[1:67],
   count = as.vector(as.matrix(nico.tag.df["実況プレイ動画", 1:67])))
 plot(1:67, nico.jikkyo.all$count, type = "l", col = 4, xaxt="n", xlab="time", ylab="count")
-  axis(1, labels=nico.jikkyo.all$time, nico.jikkyo.all$time)
+axis(1, labels=nico.jikkyo.all$time, 1:67)
 ```
 伸び始めてるあたりからとりたいので、  
 2007/10から2年分の伸びを調べる(この辺のチョイスは適当)
@@ -74,7 +74,7 @@ nico.jikkyo <- data.frame(
   time = names(nico.tag.df)[7:31],
   count = as.vector(as.matrix(nico.tag.df["実況プレイ動画", 7:31])))
 plot(7:31, nico.jikkyo$count, type = "l", col = 4, xaxt="n", xlab="time", ylab="count")
-axis(1, labels=nico.jikkyo$time, nico.jikkyo$time)
+axis(1, labels=nico.jikkyo$time, 7:31)
 ```
 
 あ、なんかロジスティック曲線っぽい(適当)  
@@ -83,15 +83,15 @@ axis(1, labels=nico.jikkyo$time, nico.jikkyo$time)
 ### 寄り道
 「実況プレイpart1リンク」というタグがある
 ここでこいつの全体像を見ていただこう
-```{r echo=FALSE, comment=NA, out.width=800, out.height=400}
+```{r echo=FALSE, comment=NA}
 nico.jikkyo.part1 <- data.frame(
   time = names(nico.tag.df)[1:67],
   count = as.vector(as.matrix(nico.tag.df["実況プレイpart1リンク", 1:67])))
 par(mfrow = c(1, 2))
 plot(1:67, nico.jikkyo.part1$count, type = "l", col = 2, xaxt="n", xlab="time", ylab="count")
-axis(1, labels=nico.jikkyo.part1$time, nico.jikkyo.part1$time)
+axis(1, labels=nico.jikkyo.part1$time, 1:67)
 plot(1:67, nico.jikkyo.all$count, type = "l", col = 4, xaxt="n", xlab="time", ylab="count")
-axis(1, labels=nico.jikkyo.all$time, nico.jikkyo.all$time)
+axis(1, labels=nico.jikkyo.all$time, 1:67)
 ```
 
 近年急激に増えている  
@@ -141,7 +141,7 @@ nico.jikkyo$N <- rep(round(mean(nico.jikkyo$norm)), nrow(nico.jikkyo))
 line <- (1 / (1 + exp(
   -(nico.glm$coefficients[1] + nico.glm$coefficients[2] * nico.jikkyo$num))))
 
-par(family = "Osaka")
+par(family = "Osaka", mfrow = c(1, 1))
 plot(nico.jikkyo$num, line, type = "l", col = 2,
      main = "モテる動画の伸び方",
      xlab = "time", ylab = "count")
@@ -173,7 +173,7 @@ for (i in 2:5) {
   plot(1:9, mote[i, 1:9], type = "l", col = i, xlab = "", ylab = "", xaxt = "n", yaxt = "n")
 }
 legend(x = 5, y = 130, legend = row.names(mote)[1:5], col = 1:5, lty = rep(1, 5))
-axis(1, labels=as.factor(names(mote[1:9])), as.factor(names(mote[1:9])))
+axis(1, labels=as.factor(names(mote[1:9])), 1:9)
 ```
 
 ## 悲しいお知らせ

@@ -37,7 +37,7 @@ URL
 * ニコニコ動画で人気投稿者になればいい
 * しかしそれは難しい
  * 人気者はすでにいっぱいいる
- * よっぽど面白く名と人気のジャンルじゃ勝てないぞ
+ * よっぽど面白くないと人気のジャンルじゃ勝てないぞ
 
 どうすればモテる(2)
 ========================================================
@@ -49,6 +49,7 @@ URL
 ========================================================
 * データから予測しよう
 * 今流行ってるものと同じような伸び方してるもの見つければいいんじゃね？
+* ニコニコデータセットを使えばらくしょーだね♪
 
 レッツトライ♪
 ========================================================
@@ -65,9 +66,18 @@ nico.tag.table <- xtabs(count~tag + time, nico.tag.time)
 nico.tag.df <- as.data.frame(nico.tag.table[, 1:ncol(nico.tag.table)])
 nico.tag.df$sum <- rowSums(nico.tag.df)
 
-top.10 <- head(rownames(nico.tag.df[order(nico.tag.df$sum, decreasing=T), ], ), 5)
-data.frame(tag = top.10, count = nico.tag.df[top.10, "sum"])
+top.10 <- head(rownames(nico.tag.df[order(nico.tag.df$sum, decreasing=T), ], ), 10)
+top.df <- data.frame(tag = top.10, count = nico.tag.df[top.10, "sum"])
 ```
+
+        tag      |             count
+-----------------|-------------------------------
+`r top.df[1, 1]` | `r as.character(top.df[1, 2])`
+`r top.df[2, 1]` | `r as.character(top.df[2, 2])`
+`r top.df[3, 1]` | `r as.character(top.df[3, 2])`
+`r top.df[4, 1]` | `r as.character(top.df[4, 2])`
+`r top.df[5, 1]` | `r as.character(top.df[5, 2])`
+
 
 * 実況プレイ動画つよくね？
  * こいつのパターンで勝ち確だ
